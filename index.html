@@ -5,7 +5,6 @@
 <title>発音練習アプリ</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  /* 録音中アニメーション */
   .pulse {
     display: inline-block;
     width: 12px;
@@ -23,29 +22,29 @@
   }
 </style>
 </head>
-<body class="bg-gray-50 flex flex-col items-center justify-center min-h-screen font-sans">
+<body class="bg-gray-50 flex flex-col items-center justify-center min-h-screen font-sans px-2">
 
-<div class="w-full max-w-xl bg-white shadow-lg rounded-xl p-6">
-  <h1 class="text-3xl font-bold text-center mb-6">発音練習アプリ</h1>
+<div class="w-full max-w-xl bg-white shadow-lg rounded-xl p-4 md:p-6">
+  <h1 class="text-2xl md:text-3xl font-bold text-center mb-4 md:mb-6">発音練習アプリ</h1>
 
   <!-- 例文表示 -->
-  <div id="sentence" class="text-2xl font-semibold text-center mb-6 p-4 bg-gray-100 rounded-lg"></div>
+  <div id="sentence" class="text-lg md:text-2xl font-semibold text-center mb-4 md:mb-6 p-3 md:p-4 bg-gray-100 rounded-lg"></div>
 
   <!-- ボタン群 -->
-  <div class="flex justify-center gap-4 mb-6">
-    <button id="newSentence" class="bg-blue-500 hover:bg-blue-600 text-white font-bold px-6 py-3 rounded-lg transition">新しい例文</button>
-    <button id="start" class="bg-green-500 hover:bg-green-600 text-white font-bold px-6 py-3 rounded-lg transition">録音開始</button>
-    <button id="stop" class="bg-red-500 hover:bg-red-600 text-white font-bold px-6 py-3 rounded-lg transition">録音停止</button>
+  <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-4 md:mb-6">
+    <button id="newSentence" class="flex-1 md:flex-none bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-3 rounded-lg transition">新しい例文</button>
+    <button id="start" class="flex-1 md:flex-none bg-green-500 hover:bg-green-600 text-white font-bold px-4 py-3 rounded-lg transition">録音開始</button>
+    <button id="stop" class="flex-1 md:flex-none bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-3 rounded-lg transition">録音停止</button>
   </div>
 
   <!-- 認識結果表示 -->
-  <div class="bg-yellow-100 p-4 rounded-lg mb-4">
+  <div class="bg-yellow-100 p-3 md:p-4 rounded-lg mb-4">
     <h2 class="font-semibold mb-2">認識結果</h2>
-    <div id="recognizedText" class="text-lg text-gray-800 min-h-[2rem] flex items-center"></div>
+    <div id="recognizedText" class="text-base md:text-lg text-gray-800 min-h-[2rem] flex items-center"></div>
   </div>
 
   <!-- スコア表示 -->
-  <div class="bg-green-100 p-4 rounded-lg">
+  <div class="bg-green-100 p-3 md:p-4 rounded-lg">
     <h2 class="font-semibold mb-2">発音スコア</h2>
     <div id="scoreBar" class="h-6 bg-gray-300 rounded-full overflow-hidden">
       <div id="scoreFill" class="h-6 w-0 bg-green-500 text-white text-center font-bold transition-all"></div>
@@ -55,6 +54,7 @@
 </div>
 
 <script>
+// 難易度アップ版文章リスト
 const sentenceList = [
   "Despite the heavy rain, he continued running swiftly towards the station.",
   "The cat is quietly observing the birds perched on the branches outside.",
@@ -83,7 +83,6 @@ document.getElementById("newSentence").onclick = () => {
   updateScore(0);
 };
 
-// 録音中アニメーション表示
 function showRecordingAnimation() {
   const container = document.getElementById("recognizedText");
   container.innerHTML = '';
@@ -94,21 +93,19 @@ function showRecordingAnimation() {
   }
 }
 
-// スコアバー更新
 function updateScore(score) {
   const fill = document.getElementById("scoreFill");
   fill.style.width = `${score}%`;
   if(score <= 50){
-    fill.style.backgroundColor = '#F87171'; // 赤
+    fill.style.backgroundColor = '#F87171';
   } else if(score <= 80){
-    fill.style.backgroundColor = '#FBBF24'; // 黄
+    fill.style.backgroundColor = '#FBBF24';
   } else {
-    fill.style.backgroundColor = '#34D399'; // 緑
+    fill.style.backgroundColor = '#34D399';
   }
   document.getElementById("scoreText").innerText = `${score} 点`;
 }
 
-// Web Speech API の初期化
 if ('webkitSpeechRecognition' in window) {
   recognition = new webkitSpeechRecognition();
   recognition.lang = 'en-US';
@@ -151,7 +148,6 @@ document.getElementById("stop").onclick = () => {
   if (recognizing) recognition.stop();
 };
 
-// 文字列類似度（レーベンシュタイン距離）
 function stringSimilarity(str1, str2) {
   str1 = str1.toLowerCase().replace(/[^\w\s]/gi,'');
   str2 = str2.toLowerCase().replace(/[^\w\s]/gi,'');
@@ -181,7 +177,5 @@ function levenshtein(a, b) {
   return matrix[b.length][a.length];
 }
 </script>
-
 </body>
 </html>
-
