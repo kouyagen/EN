@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>発音練習アプリ</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen">
+
+<h1 class="text-2xl font-bold mb-4">発音練習アプリ</h1>
+
+<button id="newSentence" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">新しい例文</button>
+<div id="sentence" class="text-xl font-semibold mb-4">Loading...</div>
+
+<button id="start" class="bg-green-500 text-white px-4 py-2 rounded mb-2">録音開始</button>
+<button id="stop" class="bg-red-500 text-white px-4 py-2 rounded mb-4">録音停止</button>
+
+<div id="score" class="text-xl font-semibold"></div>
+
+<script>
+let audioChunks = [];
+let mediaRecorder;
+let sentenceList = [];
+
+// GitHubの単語リストを取得して例文化
+fetch('https://raw.githubusercontent.com/ikatyang/english-words/master/words.json')
+  .then(res => res.json())
+  .then(data => {
+    sentenceList = data.slice(0, 100).map(w => `I like ${w}.`);
+    document.getElementById("sentence").innerText = getRandomSentence();
+  })
+  .catch(err => console.error(err));
+
+function getRandomSentence() {
+  if(sentenceList.length === 0) return "Loading...";
+  return sentenceList[Math.floor(Math.random() * sentenceList.length)];
+}
+
+// 新しい例文ボタン
+document.getElementById("newSentence").onclick = () => {
+  const sentence = getRandomSentence();
+  document.getElementById("sentence").innerText = sentence;
+};
+
+// 録音開始
+document.getElementById("start").onclick = async () => {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  mediaRecorder = new MediaRecorder(stream);
+  audioChunks = [];
+  mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+  mediaRecorder.start();
+  document.getElementById("score").innerText = "録音中...";
+};
+
+// 録音停止
+document.getElementById("stop").onclick = async () => {
+  mediaRecorder.stop();
+  mediaRecorder.onstop = async () => {
+    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+
+    // 発音採点APIに送信（サーバーレス関数経由を推奨）
+    const formData = new FormData();
+    formData.append('file', audioBlob);
+
+    const res = await fetch('YOUR_SERVERLESS_FUNCTION_URL', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await res.json();
+    const recognizedText = data.text;
+    const correctText = document.getElementById("sentence").innerText;
+
+    // 簡易スコア計算
+    const similarity = stringSimilarity(correctText, recognizedText);
+    const score = Math.round(similarity * 100);
+    document.getElementById("score").innerText = `発音スコア: ${score}\n認識結果: ${recognizedText}`;
+  };
+};
+
+// 文字列類似度計算関数
+function stringSimilarity(str1, str2) {
+  str1 = str1.toLowerCase().replace(/[^\w\s]/gi,'');
+  str2 = str2.toLowerCase().replace(/[^\w\s]/gi,'');
+  const longer = str1.length > str2.length ? str1 : str2;
+  const shorter = str1.length > str2.length ? str2 : str1;
+  const longerLength = longer.length;
+  if (longerLength === 0) return 1.0;
+  const editDist = levenshtein(longer, shorter);
+  return (longerLength - editDist) / parseFloat(longerLength);
+}
+
+// レーベンシュタイン距離
+function levenshtein(a, b) {
+  const matrix = [];
+  for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+  for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i-1) === a.charAt(j-1)) matrix[i][j] = matrix[i-1][j-1];
+      else matrix[i][j] = Math.min(matrix[i-1][j-1]+1, matrix[i][j-1]+1, matrix[i-1][j]+1);
+    }
+  }
+  return matrix[b.length][a.length];
+}
+</script>
+
+</body>
+</html>
